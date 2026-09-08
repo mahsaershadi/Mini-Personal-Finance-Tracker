@@ -12,19 +12,19 @@ BACKUP_FOLDER = 'backup'
 #file setup
 def setup_files():
     if not os.path.exists(INCOME_FILE):
-        with open(INCOME_FILE, 'w', newline='') as file:
+        with open(INCOME_FILE, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
-            writer.writerow(['Amount', 'Source', 'Date'])
+            writer.writerow(["amount", "source", "date"])
 
     if not os.path.exists(EXPENSES_FILE):
-        with open(EXPENSES_FILE, 'w', newline='') as file:
+        with open(EXPENSES_FILE, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
-            writer.writerow(['Amount', 'Category', 'Date'])
+            writer.writerow(["amount", "category", "date"])
 
     if not os.path.exists(BUDGET_FILE):
-        with open(BUDGET_FILE, 'w', newline='') as file:
+        with open(BUDGET_FILE, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
-            writer.writerow(['Category', 'Budget'])
+            writer.writerow(["category", "budget"])
 
 
 #input validation
@@ -80,7 +80,7 @@ def add_income():
     date = get_date()
 
     try:
-        with open(INCOME_FILE, 'a', newline='') as file:
+        with open(INCOME_FILE, "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerow([amount, source, date])
 
@@ -99,7 +99,7 @@ def add_expense():
     date = get_date()
 
     try:
-        with open(EXPENSES_FILE, 'a', newline='') as file:
+        with open(EXPENSES_FILE, "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerow([amount, category, date])
 
@@ -114,46 +114,51 @@ def view_income():
     print("\n========== VIEW INCOME ==========")
 
     try:
-        with open(INCOME_FILE, 'r') as file:
-            reader = csv.reader(file)
-            next(reader)  #Skip header
+        with open(INCOME_FILE, "r", newline="", encoding="utf-8") as file:
+            reader = csv.DictReader(file)
             records = list(reader)
 
             if not records:
                 print("No income records found.")
                 return
 
-            for record in records:
-                print(f"Amount: {record[0]}, Source: {record[1]}, Date: {record[2]}")
+            print(f"{'Date':<15}{'Source':<20}{'Amount':>12}")
+            print("-" * 47)
 
-    except OSError as error:
-        print("Error reading income:", error)
+            for record in records:
+                print(
+                    f"{record['date']:<15}"
+                    f"{record['source']:<20}"
+                    f"{float(record['amount']):>12.2f}"
+                )
+
+    except (OSError, ValueError, KeyError) as error:
+            print("Error reading income records:", error)
 
 #view expenses
 def view_expenses():
     print("\n========== EXPENSE RECORDS ==========")
 
     try:
-        with open(EXPENSES_FILE, "r", newline="") as file:
+        with open(EXPENSES_FILE, "r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
-
             records = list(reader)
 
             if not records:
                 print("No expense records found.")
                 return
 
-            print(f"{'Date':<15}{'Category':<20}{'Amount':>10}")
-            print("-" * 45)
+            print(f"{'Date':<15}{'Category':<20}{'Amount':>12}")
+            print("-" * 47)
 
             for record in records:
                 print(
                     f"{record['date']:<15}"
                     f"{record['category']:<20}"
-                    f"{float(record['amount']):>10.2f}"
+                    f"{float(record['amount']):>12.2f}"
                 )
 
-    except (OSError, ValueError) as error:
+    except (OSError, ValueError, KeyError) as error:
         print("Error reading expense records:", error)
 
 
@@ -164,34 +169,36 @@ def view_all_records():
     view_income()
     view_expenses()
 
+
+
 #calculate total income
 def get_total_income():
     total_income = 0.0
 
     try:
-        with open(INCOME_FILE, 'r') as file:
-            reader = csv.reader(file)
-            next(reader)  
-            for record in reader:
-                total_income += float(record[0])
+        with open(INCOME_FILE, "r", newline="", encoding="utf-8") as file:
+            reader = csv.DictReader(file)
 
-    except OSError as error:
+            for record in reader:
+                total_income += float(record["amount"])
+
+    except (OSError, ValueError, KeyError) as error:
         print("Error reading income:", error)
 
     return total_income
 
 #calculate total expenses
-def get_total_expenses(): 
+def get_total_expenses():
     total_expenses = 0.0
 
     try:
-        with open(EXPENSES_FILE, 'r') as file:
-            reader = csv.reader(file)
-            next(reader)  
-            for record in reader:
-                total_expenses += float(record[0])
+        with open(EXPENSES_FILE, "r", newline="", encoding="utf-8") as file:
+            reader = csv.DictReader(file)
 
-    except OSError as error:
+            for record in reader:
+                total_expenses += float(record["amount"])
+
+    except (OSError, ValueError, KeyError) as error:
         print("Error reading expenses:", error)
 
     return total_expenses
@@ -209,6 +216,8 @@ def show_summary():
     print(f"Total Expenses: {total_expenses:.2f}")
     print(f"Balance: {balance:.2f}")
 
+
+
 #set budget
 def set_budget():
     print("\n========== SET BUDGET ==========")
@@ -219,11 +228,9 @@ def set_budget():
     budgets = []
 
     try:
-        with open(BUDGET_FILE, "r", newline="") as file:
+        with open(BUDGET_FILE, "r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
-
-            for record in reader:
-                budgets.append(record)
+            budgets = list(reader)
 
     except OSError as error:
         print("Error reading budgets:", error)
@@ -236,6 +243,7 @@ def set_budget():
             record["category"] = category
             record["budget"] = budget
             category_found = True
+            break
 
     if not category_found:
         budgets.append({
@@ -244,7 +252,7 @@ def set_budget():
         })
 
     try:
-        with open(BUDGET_FILE, "w", newline="") as file:
+        with open(BUDGET_FILE, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
 
             writer.writerow(["category", "budget"])
@@ -261,6 +269,8 @@ def set_budget():
         print("Error saving budget:", error)
 
 
+
+
 #view budgets
 def view_budgets():
     print("\n========== BUDGET REPORT ==========")
@@ -268,9 +278,8 @@ def view_budgets():
     category_totals = get_expenses_by_category()
 
     try:
-        with open(BUDGET_FILE, "r", newline="") as file:
+        with open(BUDGET_FILE, "r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
-
             records = list(reader)
 
             if not records:
@@ -284,14 +293,12 @@ def view_budgets():
                 f"{'Remaining':>15}"
             )
 
-            print("-" * 60)
+            print("-" * 59)
 
             for record in records:
-
                 category = record["category"]
                 budget = float(record["budget"])
-                spent = category_totals.get(category, 0)
-
+                spent = category_totals.get(category, 0.0)
                 remaining = budget - spent
 
                 print(
@@ -307,7 +314,7 @@ def view_budgets():
                         f"{category} budget!"
                     )
 
-    except (OSError) as error:
+    except (OSError, ValueError, KeyError) as error:
         print("Error reading budgets:", error)
 
 
@@ -316,7 +323,7 @@ def get_expenses_by_category():
     category_totals = {}
 
     try:
-        with open(EXPENSES_FILE, "r", newline="") as file:
+        with open(EXPENSES_FILE, "r", newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
 
             for record in reader:
@@ -325,11 +332,10 @@ def get_expenses_by_category():
 
                 if category in category_totals:
                     category_totals[category] += amount
-
                 else:
                     category_totals[category] = amount
 
-    except (OSError) as error:
+    except (OSError, ValueError, KeyError) as error:
         print("Error reading expenses:", error)
 
     return category_totals
@@ -341,6 +347,7 @@ def expense_pie_chart():
         import matplotlib.pyplot as plt
     except ImportError:
         print("\nMatplotlib is not installed.")
+        print("Install it with: pip install matplotlib")
         return
 
     category_totals = get_expenses_by_category()
@@ -361,6 +368,8 @@ def expense_pie_chart():
     )
 
     plt.title("Expenses by Category")
+    plt.tight_layout()
+    plt.show()
 
 
 #backup data
@@ -378,7 +387,6 @@ def backup_data():
         ]
 
         for file_name in files:
-
             if os.path.exists(file_name):
                 destination = os.path.join(
                     BACKUP_FOLDER,
@@ -415,11 +423,9 @@ def show_menu():
 
 #main program
 def main():
-
     setup_files()
 
     while True:
-
         show_menu()
 
         choice = input("Choose an option: ").strip()
